@@ -1,31 +1,37 @@
 import axios from 'axios';
-// import RNFS from 'react-native-fs';
-
-
-    const apiKey= "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";
+import * as FileSystem from 'expo-file-system';
 
 
 async function transcribeAndSummarize(audioFilePath) {
-        // const audioFile = await RNFS.readFile(audioFilePath, 'base64');
-        const form = new FormData();
-      form.append('file', {
-        name: 'audio.mp3',
-        type: 'audio/mp3',
-        uri: audioFilePath,
-      });
-        const response = await axios.post(
-        'https://api.openai.com/v1/audio/transcriptions',
-        form,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${apiKey}`,
-          },
-        }
-      );
-      console.log(response);
+       try {
+    // Read the file as a Base64-encoded string
+    const base64Audio = await FileSystem.readAsStringAsync(audioFilePath, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
 
-    var prompt="Summarize this in 50 words or less: " + transcription; 
+    // Prepare the headers for the request
+    const headers = {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json', // This might need to be adjusted based on the API's requirements
+    };
+
+    // Prepare the body. Adjust the structure as needed for the API.
+    // This is an example assuming the API can handle Base64 directly or you handle conversion on the server.
+    const body = {
+      file: base64Audio,
+      model: 'whisper-1',
+      response_format: 'text'
+    };
+
+    // Send the request
+    const response = await axios.post('https://api.openai.com/v1/audio/transcriptions', body, { headers });
+
+    console.log('Response:', response.data);
+  } catch (error) {
+    console.error('Error uploading file:', error);
+  } 
+
+    var prompt="Summarize this in 50 words or less: " + response; 
 
 
 const textresponse = await axios.post(
